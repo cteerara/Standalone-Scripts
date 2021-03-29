@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+import sys, os, argparse
+
+# -------------------------------------------------------------------------------
+# Generate a basic circle mesh in dolfin-xml format with the prescribed center and radius
+# Dependency: 1) gmsh
+#             2) FEniCS
+# Author: Chayut Teeraratkul
+# -------------------------------------------------------------------------------
+
+# Parse input arguments
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-x", type=float, dest='x', default=0, help='x-coordinate for mesh center')
+parser.add_argument("-y", type=float, dest='y', default=0, help='y-coordinate for mesh center')
+parser.add_argument("-z", type=float, dest='z', default=0, help='z-coordinate for mesh center')
+parser.add_argument("-r", type=float, dest='r', default=1, help='r-coordinate for mesh center')
+parser.add_argument("-m", type=float, dest='m', default=4, help='mesh size modifier')
+parser.add_argument("-d", type=bool,  dest='d', default=True, help='Retains the *.geo, *.msh, *.xml files')
+parser.add_argument("-o", type=str  , dest='name', default='circle', help='Name of mesh output file')
+args = parser.parse_args(sys.argv[1:])
+x = args.x
+y = args.y
+z = args.z
+R = args.r
+size_mod = args.m
+filename = args.name
+
+
+# Write gmsh's .geo file
+fid = open(filename+".geo", "w")
+fid.write("Mesh.MshFileVersion = 2.0;\n")
+fid.write("h=%f;\n" % (R/size_mod))
+fid.write("R=%f;\n" % R)
+fid.write("cenX=%f;\n" % x)
+fid.write("cenY=%f;\n" % y)
+fid.write("cenZ=%f;\n" % 0)
+fid.write("Point(1) = {cenX,cenY, cenZ, h};\nPoint(2) = {cenX+R, cenY, cenZ, h};\nPoint(3) = {cenX-R, cenY, cenZ, h};\nPoint(4) = {cenX, cenY+R, cenZ, h};\nPoint(5) = {cenX, cenY-R, cenZ, h};\nCircle(1) = {2, 1, 4};\nCircle(2) = {4, 1, 3};\nCircle(3) = {3, 1, 5};\nCircle(4) = {5, 1, 2};\nLine Loop(14) = {1,2,3,4};\nRuled Surface(14) = {14};\nPhysical Line(1) = {2, 1, 4, 3};\nPhysical Surface(1) = {14};\n")
+fid.close()
+
+# Convert to dolfin's xml format
+os.system("gmsh -2 %s -o %s -v 0" % (filename+".geo", filename+".msh"))
+os.system("dolfin-convert %s %s" %(filename+".msh", filename+".xml"))
+
+# Delete straggling files
+if args.d:
+    os.system("rm %s" % filename+".geo")
+    os.system("rm %s" % filename+".msh")
+    os.system("rm %s" % filename+"_facet_region.xml")
+    os.system("rm %s" % filename+"_physical_region.xml")
+
+# Report output
+print("CIRCLE: Mesh center: (%f,%f,%f). Mesh size modifier: %f. Radius: %f. Named: %s" %(x,y,z,R,size_mod,filename))
