@@ -1,4 +1,9 @@
 #!/bin/bash
+# -------------------------------------------------------------------------------
+# search all files in the current directory with a specified extension for a specified keyword 
+# Author: Chayut Teeraratkul
+# -------------------------------------------------------------------------------
+
  Help()
  {
    echo "This script search for a keyword in all files in the current directory with a specified extension"

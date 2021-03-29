@@ -1,2 +1,35 @@
 #!/bin/bash
-ffmpeg -i $1 -c:v libx264 -crf 19 -preset slow -c:a libfdk_aac -b:a 192k -ac 2 $2
+
+# -------------------------------------------------------------------------------
+# convert avi file to an mp4 file with the same name 
+# Dependency: 1) ffmpeg
+# Author: Chayut Teeraratkul
+# -------------------------------------------------------------------------------
+
+ Help()
+ {
+   echo "This script search for a keyword in all files in the current directory with a specified extension"
+   echo "search_kw [-f] [-o]"
+   echo "f : avi file name"
+   echo "o : output file name. default will be the avi file name"
+ }
+
+ # Get the options
+ while getopts ":f:o:h" option; do
+   case $option in
+     h) # display Help
+       Help
+       exit;;
+     f) AVIFILE=${OPTARG};; # assign variables
+     o) OUTPUT=${OPTARG};;
+    \?) # incorrect option
+        echo "Error: Invalid option"
+        exit;;
+   esac
+ done
+
+if ! [[ ${OUTPUT}  ]]; then
+  OUTPUT=${AVIFILE%.*}   
+  echo "Have -o output"
+fi
+ffmpeg -i ${AVIFILE} -c:v libx264 -crf 19 -preset slow -c:a libfdk_aac -b:a 192k -ac 2 ${OUTPUT}.mp4
