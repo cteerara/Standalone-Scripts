@@ -1,9 +1,4 @@
 #!/bin/bash
-# -------------------------------------------------------------------------------
-# search all files in the current directory with a specified extension for a specified keyword 
-# Author: Chayut Teeraratkul
-# -------------------------------------------------------------------------------
-
  Help()
  {
    echo "This script search for a keyword in all files in the current directory with a specified extension"
@@ -32,7 +27,8 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 
-for f in *.${FILE_EXTENSION}
+shopt -s globstar
+for f in **/*.${FILE_EXTENSION}
 do 
   if [[ $(cat $f | grep ${KEYWORD} -${GREP_INPUTS}n --color=always) ]]; then
     echo ""
