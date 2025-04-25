@@ -1,21 +1,20 @@
 #!/bin/bash
 
-# Define text styles
+# Define text styles for grep
 bold=$(tput bold)
 green=$(tput setaf 2)
 normal=$(tput sgr0)
 
-# Check if the user provided at least two arguments (at least one pattern and one keyword)
+# Check if the user provided at least two arguments - at least one pattern and one keyword
 if [ $# -lt 2 ]; then
     echo "Run: $0 pattern1 pattern2(optional) keyword"
     exit 1
 fi
 
-# Extract the keyword (last argument)
+# Extract the last arg as keyword to grep
 keyword="${!#}"
 
-# Loop over all patterns, and create an array of files
-# to grep
+# Loop over all patterns and create an array of files to grep
 matches=()
 for pattern in "${@:1:$#-1}"; do
     while IFS= read -r -d '' file; do
@@ -23,7 +22,7 @@ for pattern in "${@:1:$#-1}"; do
     done < <(find . -type f -name "$pattern" -print0)
 done
 
-# Check if any files match the patterns
+# Loop through all files and grep results
 if [ ${#matches[@]} -gt 0 ]; then
     for file in "${matches[@]}"; do
         search_result=$(grep -i --color=always -n "$keyword" "$file")
