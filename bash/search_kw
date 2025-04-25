@@ -1,42 +1,42 @@
 #!/bin/bash
- Help()
- {
-   echo "This script search for a keyword in all files in the current directory with a specified extension"
-   echo "search_kw [-f] [-k] [-n]"
-   echo "f : file extension you are searching kerwords in"
-   echo "k : the keyword you are searching for"
-   echo "n : number of lines below the line containing the keyword"
- }
 
- # Get the options
- while getopts ":f:k:n:h" option; do
-   case $option in
-     h) # display Help
-       Help
-       exit;;
-     f) FILE_EXTENSION=${OPTARG};; # assign variables
-     k) KEYWORD=${OPTARG};;
-     n) GREP_INPUTS=${OPTARG};;
-    \?) # incorrect option
-        echo "Error: Invalid option"
-        exit;;
-   esac
- done
-
+# Define text styles
 bold=$(tput bold)
+green=$(tput setaf 2)
 normal=$(tput sgr0)
 
+# Check if the user provided at least two arguments (at least one pattern and one keyword)
+if [ $# -lt 2 ]; then
+    echo "Run: $0 pattern1 pattern2(optional) keyword"
+    exit 1
+fi
 
-shopt -s globstar
-for f in **/*.${FILE_EXTENSION}
-do 
-  if [[ $(cat $f | grep ${KEYWORD} -${GREP_INPUTS}n --color=always) ]]; then
-    echo ""
-    echo "-------------------------------------------------------------"
-    echo ${bold}${f}${normal}
-    cat $f | grep ${KEYWORD} -${GREP_INPUTS}n --color=always  
-    echo "-------------------------------------------------------------"
-  fi
+# Extract the keyword (last argument)
+keyword="${!#}"
+
+# Loop over all patterns, and create an array of files
+# to grep
+matches=()
+for pattern in "${@:1:$#-1}"; do
+    while IFS= read -r -d '' file; do
+        matches+=("$file")
+    done < <(find . -type f -name "$pattern" -print0)
 done
 
-
+# Check if any files match the patterns
+if [ ${#matches[@]} -gt 0 ]; then
+    for file in "${matches[@]}"; do
+        search_result=$(grep -i --color=always -n "$keyword" "$file")
+        if [[ -n $search_result ]]
+        then
+            echo ""
+            echo "============================================="
+            echo "${bold}${green}${file}${normal}"
+            echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+            grep -i --color=always -n "$keyword" "$file" # has to re-run to get newlines to print
+            echo "============================================="
+        fi
+    done
+else
+    echo "No files found matching the given patterns."
+fi
